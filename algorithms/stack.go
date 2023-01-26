@@ -79,7 +79,7 @@ func (s *stack[T]) FlushReverse() (result []T) {
 		result = append(result, *v)
 		return result
 	}
-	result = append(result, s.FlushReverse()...)
+	result = s.FlushReverse()
 	result = append(result, *v)
 	return result
 }

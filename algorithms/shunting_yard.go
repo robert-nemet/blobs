@@ -47,9 +47,6 @@ func (sy shuntingYard) Transform(infix string) (postfix string) {
 	}
 
 	fv := sy.OutputStack.FlushReverse()
-	// for i, j := 0, len(fv)-1; i < j; i, j = i+1, j-1 {
-	// 	fv[i], fv[j] = fv[j], fv[i]
-	// }
 	return strings.Join(fv, "")
 }
 
