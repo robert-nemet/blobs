@@ -1,4 +1,4 @@
-package algos
+package algorithms
 
 import "testing"
 

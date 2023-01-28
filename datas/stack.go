@@ -1,4 +1,4 @@
-package algos
+package datas
 
 type Stack[T any] interface {
 	Push(value T)

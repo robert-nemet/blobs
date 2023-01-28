@@ -1,7 +1,9 @@
-package algos
+package algorithms
 
 import (
 	"strings"
+
+	"github.com/robert-nemet/blobs/datas"
 )
 
 /*
@@ -9,9 +11,7 @@ import (
  */
 
 type shuntingYard struct {
-	Operators      map[string]int
-	OutputStack    Stack[string]
-	OperatorsStack Stack[string]
+	Operators map[string]int
 }
 
 type ShuntingYard interface {
@@ -27,52 +27,53 @@ type ShuntingYard interface {
 
 func NewShuntingYard(oprs map[string]int) ShuntingYard {
 	return shuntingYard{
-		Operators:      oprs,
-		OutputStack:    NewStack[string](nil),
-		OperatorsStack: NewStack[string](nil),
+		Operators: oprs,
 	}
 }
 
 func (sy shuntingYard) Transform(infix string) (postfix string) {
 	infixArray := strings.Split(infix, " ")
+	out := datas.NewStack[string](nil)
+	ops := datas.NewStack[string](nil)
+
 	for _, v := range infixArray {
 		switch {
 		case sy.isValue(v):
-			sy.OutputStack.Push(v)
+			out.Push(v)
 		case sy.isLeftBracket(v):
-			sy.OperatorsStack.Push(v)
+			ops.Push(v)
 		case sy.isRightBracket(v):
 			for {
-				if sy.OperatorsStack.IsEmpty() {
+				if ops.IsEmpty() {
 					break
 				}
-				nv := sy.OperatorsStack.Pop()
+				nv := ops.Pop()
 				if sy.isLeftBracket(*nv) {
 					break
 				}
-				sy.OutputStack.Push(*nv)
+				out.Push(*nv)
 			}
 		default:
-			if !sy.OperatorsStack.IsEmpty() && !sy.isLeftBracket(*sy.OperatorsStack.Peek()) {
-				for !sy.OperatorsStack.IsEmpty() && !sy.greater(v, *sy.OperatorsStack.Peek()) {
-					oldOp := *sy.OperatorsStack.Pop()
-					sy.OutputStack.Push(oldOp)
+			if !ops.IsEmpty() && !sy.isLeftBracket(*ops.Peek()) {
+				for !ops.IsEmpty() && !sy.greater(v, *ops.Peek()) {
+					oldOp := *ops.Pop()
+					out.Push(oldOp)
 				}
 			}
-			sy.OperatorsStack.Push(v)
+			ops.Push(v)
 		}
 	}
 
-	for !sy.OperatorsStack.IsEmpty() {
-		sy.OutputStack.Push(*sy.OperatorsStack.Pop())
+	for !ops.IsEmpty() {
+		out.Push(*ops.Pop())
 	}
 
-	fv := sy.OutputStack.FlushReverse()
+	fv := out.FlushReverse()
 	return strings.Join(fv, " ")
 }
 
 func (sy shuntingYard) isOp(op string) bool {
-	for k, _ := range sy.Operators {
+	for k := range sy.Operators {
 		if op == k {
 			return true
 		}
