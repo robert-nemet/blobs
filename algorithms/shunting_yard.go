@@ -1,13 +1,15 @@
 package algos
 
-import "strings"
+import (
+	"strings"
+)
 
 /*
  * Convert expresion from infix notation to postfix notation
  */
 
 type shuntingYard struct {
-	Operators      []string
+	Operators      map[string]int
 	OutputStack    Stack[string]
 	OperatorsStack Stack[string]
 }
@@ -15,10 +17,15 @@ type shuntingYard struct {
 type ShuntingYard interface {
 	Transform(infix string) (postfix string)
 
-	isOp(op rune) bool
+	isOp(op string) bool
+	isValue(op string) bool
+	isBracket(op string) bool
+	isLeftBracket(op string) bool
+	isRightBracket(op string) bool
+	greater(newOp, oldOp string) bool
 }
 
-func NewShuntingYard(oprs []string) ShuntingYard {
+func NewShuntingYard(oprs map[string]int) ShuntingYard {
 	return shuntingYard{
 		Operators:      oprs,
 		OutputStack:    NewStack[string](nil),
@@ -27,18 +34,32 @@ func NewShuntingYard(oprs []string) ShuntingYard {
 }
 
 func (sy shuntingYard) Transform(infix string) (postfix string) {
-	for _, s := range infix {
-		v := string(s)
-		if sy.isOp(s) {
-			if sy.OperatorsStack.IsEmpty() {
-				sy.OperatorsStack.Push(v)
-			} else {
-				oldOp := *sy.OperatorsStack.Pop()
-				sy.OutputStack.Push(oldOp)
-				sy.OperatorsStack.Push(v)
-			}
-		} else {
+	infixArray := strings.Split(infix, " ")
+	for _, v := range infixArray {
+		switch {
+		case sy.isValue(v):
 			sy.OutputStack.Push(v)
+		case sy.isLeftBracket(v):
+			sy.OperatorsStack.Push(v)
+		case sy.isRightBracket(v):
+			for {
+				if sy.OperatorsStack.IsEmpty() {
+					break
+				}
+				nv := sy.OperatorsStack.Pop()
+				if sy.isLeftBracket(*nv) {
+					break
+				}
+				sy.OutputStack.Push(*nv)
+			}
+		default:
+			if !sy.OperatorsStack.IsEmpty() && !sy.isLeftBracket(*sy.OperatorsStack.Peek()) {
+				for !sy.OperatorsStack.IsEmpty() && !sy.greater(v, *sy.OperatorsStack.Peek()) {
+					oldOp := *sy.OperatorsStack.Pop()
+					sy.OutputStack.Push(oldOp)
+				}
+			}
+			sy.OperatorsStack.Push(v)
 		}
 	}
 
@@ -47,15 +68,34 @@ func (sy shuntingYard) Transform(infix string) (postfix string) {
 	}
 
 	fv := sy.OutputStack.FlushReverse()
-	return strings.Join(fv, "")
+	return strings.Join(fv, " ")
 }
 
-func (sy shuntingYard) isOp(op rune) bool {
-	ops := string(op)
-	for _, opv := range sy.Operators {
-		if ops == opv {
+func (sy shuntingYard) isOp(op string) bool {
+	for k, _ := range sy.Operators {
+		if op == k {
 			return true
 		}
 	}
 	return false
+}
+
+func (sy shuntingYard) isValue(op string) bool {
+	return !(sy.isOp(op) || sy.isBracket(op))
+}
+
+func (sy shuntingYard) isBracket(op string) bool {
+	return sy.isLeftBracket(op) || sy.isRightBracket(op)
+}
+
+func (sy shuntingYard) isLeftBracket(op string) bool {
+	return op == "("
+}
+
+func (sy shuntingYard) isRightBracket(op string) bool {
+	return op == ")"
+}
+
+func (sy shuntingYard) greater(newOp, oldOp string) bool {
+	return sy.Operators[newOp] > sy.Operators[oldOp]
 }
