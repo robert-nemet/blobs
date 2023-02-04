@@ -6,7 +6,7 @@ import (
 	"github.com/robert-nemet/blobs/datas"
 )
 
-type Operation[T any] func(fop T, sop T) T
+type Operation[T any] func(stack datas.Stack[T]) T
 type Convert[T any] func(input string) (T, error)
 
 type Evaluator[T any] interface {
@@ -32,9 +32,7 @@ func (e evaluator[T]) Evaluate(postfix string) (T, error) {
 	input := strings.Split(postfix, " ")
 	for _, token := range input {
 		if e.isOperation(token) {
-			sop := *stack.Pop()
-			fop := *stack.Pop()
-			newop := e.operators[token](fop, sop)
+			newop := e.operators[token](stack)
 			stack.Push(newop)
 		} else {
 			val, err := e.convert(token)

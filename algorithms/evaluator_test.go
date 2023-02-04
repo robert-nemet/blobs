@@ -4,17 +4,20 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/robert-nemet/blobs/datas"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_EvaluateExpressionInt(t *testing.T) {
 
 	operations := map[string]Operation[int]{
-		"+": func(x, y int) int {
-			return x + y
+		"+": func(s datas.Stack[int]) int {
+			return *s.Pop() + *s.Pop()
 		},
-		"-": func(x, y int) int {
-			return x - y
+		"-": func(s datas.Stack[int]) int {
+			sop := *s.Pop()
+			fop := *s.Pop()
+			return fop - sop
 		},
 	}
 	evaluator := NewEvaluator(operations, func(input string) (int, error) {
@@ -70,11 +73,18 @@ func Test_EvaluateExpressionInt(t *testing.T) {
 func Test_EvaluateExpressionBool(t *testing.T) {
 
 	operations := map[string]Operation[bool]{
-		"&": func(x, y bool) bool {
-			return x && y
+		"&": func(s datas.Stack[bool]) bool {
+			sop := *s.Pop()
+			fop := *s.Pop()
+			return fop && sop
 		},
-		"|": func(x, y bool) bool {
-			return x || y
+		"|": func(s datas.Stack[bool]) bool {
+			sop := *s.Pop()
+			fop := *s.Pop()
+			return fop || sop
+		},
+		"^": func(s datas.Stack[bool]) bool {
+			return !*s.Pop()
 		},
 	}
 	evaluator := NewEvaluator(operations, func(input string) (bool, error) {
@@ -87,6 +97,12 @@ func Test_EvaluateExpressionBool(t *testing.T) {
 		expect    bool
 		err       bool
 	}{
+		{
+			name:      "true true ^ &",
+			expresion: "true true ^ &",
+			expect:    false,
+			err:       false,
+		},
 		{
 			name:      "true true &",
 			expresion: "true true &",
@@ -110,6 +126,12 @@ func Test_EvaluateExpressionBool(t *testing.T) {
 			expresion: "true false true | & xxx",
 			expect:    false,
 			err:       true,
+		},
+		{
+			name:      "false ^ false ^ &",
+			expresion: "false ^ false ^ &",
+			expect:    true,
+			err:       false,
 		},
 	}
 

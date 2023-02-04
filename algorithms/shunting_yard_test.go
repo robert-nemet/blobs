@@ -51,6 +51,18 @@ func Test_shuntingYard_Transform(t *testing.T) {
 			infix:       "B + C / D + B * A",
 			wantPostfix: "B C D / + B A * +",
 		},
+		{
+			name:        "A & ^ B",
+			operators:   map[string]int{"&": 1, "|": 1, "^": 2},
+			infix:       "A & ^ B",
+			wantPostfix: "A B ^ &",
+		},
+		{
+			name:        "^A & ^ B",
+			operators:   map[string]int{"&": 1, "|": 1, "^": 2},
+			infix:       "^ A & ^ B",
+			wantPostfix: "A ^ B ^ &",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
