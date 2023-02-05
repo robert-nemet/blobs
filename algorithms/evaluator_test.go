@@ -1,6 +1,7 @@
 package algorithms
 
 import (
+	"errors"
 	"strconv"
 	"testing"
 
@@ -11,13 +12,27 @@ import (
 func Test_EvaluateExpressionInt(t *testing.T) {
 
 	operations := map[string]Operation[int]{
-		"+": func(s datas.Stack[int]) int {
-			return *s.Pop() + *s.Pop()
+		"+": func(s datas.Stack[int]) (int, error) {
+			fop := s.Pop()
+			if fop == nil {
+				return 0, errors.New("no operand")
+			}
+			sop := s.Pop()
+			if sop == nil {
+				return 0, errors.New("no operand")
+			}
+			return *fop + *sop, nil
 		},
-		"-": func(s datas.Stack[int]) int {
-			sop := *s.Pop()
-			fop := *s.Pop()
-			return fop - sop
+		"-": func(s datas.Stack[int]) (int, error) {
+			sop := s.Pop()
+			if sop == nil {
+				return 0, errors.New("no operand")
+			}
+			fop := s.Pop()
+			if sop == nil {
+				return 0, errors.New("no operand")
+			}
+			return *fop - *sop, nil
 		},
 	}
 	evaluator := NewEvaluator(operations, func(input string) (int, error) {
@@ -73,18 +88,34 @@ func Test_EvaluateExpressionInt(t *testing.T) {
 func Test_EvaluateExpressionBool(t *testing.T) {
 
 	operations := map[string]Operation[bool]{
-		"&": func(s datas.Stack[bool]) bool {
-			sop := *s.Pop()
-			fop := *s.Pop()
-			return fop && sop
+		"&": func(s datas.Stack[bool]) (bool, error) {
+			sop := s.Pop()
+			if sop == nil {
+				return false, errors.New("no operand")
+			}
+			fop := s.Pop()
+			if fop == nil {
+				return false, errors.New("no operand")
+			}
+			return *fop && *sop, nil
 		},
-		"|": func(s datas.Stack[bool]) bool {
-			sop := *s.Pop()
-			fop := *s.Pop()
-			return fop || sop
+		"|": func(s datas.Stack[bool]) (bool, error) {
+			sop := s.Pop()
+			if sop == nil {
+				return false, errors.New("no operand")
+			}
+			fop := s.Pop()
+			if fop == nil {
+				return false, errors.New("no operand")
+			}
+			return *fop || *sop, nil
 		},
-		"^": func(s datas.Stack[bool]) bool {
-			return !*s.Pop()
+		"^": func(s datas.Stack[bool]) (bool, error) {
+			op := s.Pop()
+			if op == nil {
+				return false, errors.New("no operand")
+			}
+			return !*op, nil
 		},
 	}
 	evaluator := NewEvaluator(operations, func(input string) (bool, error) {
